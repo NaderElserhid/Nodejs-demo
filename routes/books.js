@@ -9,10 +9,18 @@ let books = [
   { id: 3, title: "The Da Vinci Code", author: "Dan Brown", price: 12 },
 ];
 
+// @dec    Get all books
+// @route  GET /api/books
+// @access Public
+// @method GET
 router.get("/", (req, res) => {
   res.json(books);
 });
 
+// @dec    Get a book by id
+// @route  GET /api/books/:id
+// @access Public
+// @method GET
 // to get a book by id
 router.get("/:id", (req, res) => {
   const book = books.find((b) => b.id === parseInt(req.params.id));
@@ -23,17 +31,15 @@ router.get("/:id", (req, res) => {
   }
 });
 
-//to add a new book
+// @dec    Add a book
+// @route  POST /api/books
+// @access Public
+// @method POST
 
 router.post("/", (req, res) => {
-  const schema = joi.object({
-    title: joi.string().trim().min(3).required(),
-    author: joi.string().trim().min(3).required(),
-    price: joi.number().min(1).required(),
-  });
-  const result = schema.validate(req.body);
-  if (result.error) {
-    res.status(400).send(result.error.details[0].message);
+  const { error } = validateCreateBook(req.body);
+  if (error) {
+    res.status(400).send(error.details[0].message);
     return;
   }
 
@@ -47,15 +53,57 @@ router.post("/", (req, res) => {
   res.status(201).json(book);
 });
 
-// to get a book by title
+// @dec    Update a book
+// @route  PUT /api/books/:id
+// @access Public
+// @method PUT
 
-// app.get('/api/books/:title', (req, res) => {
-//    const book = books.find(b => b.title === req.params.title);
-//    if(book){
-//       res.status(200).json(book);
-//    }else{
-//       res.status(404).send('The book with the given title was not found');
-//    }
-// });
+router.put("/:id", (req, res) => {
+  const book = books.find((b) => b.id === parseInt(req.params.id));
+  if (book) {
+    res.status(200).json({ message: "Book updated successfully" });
+  } else {
+    res.status(404).send("The book with the given ID was not found");
+  }
+  const { error } = validateUpdateBook(req.body);
+  if (error) {
+    res.status(400).send(error.details[0].message);
+    return;
+  }
+  res.status(200).json(book);
+});
 
+// @dec    Delete a book
+// @route  DELETE /api/books/:id
+// @access Public
+// @method DELETE
+
+router.delete("/:id", (req, res) => {
+  const book = books.find((b) => b.id === parseInt(req.params.id));
+  if (book) {
+    books = books.filter((b) => b.id !== parseInt(req.params.id));
+    res.status(200).json({ message: "Book deleted successfully" });
+  } else {
+    res.status(404).send("The book with the given ID was not found");
+  }
+});
+//validate create book
+function validateCreateBook(book) {
+  const schema = joi.object({
+    title: joi.string().trim().min(3).required(),
+    author: joi.string().trim().min(3).required(),
+    price: joi.number().min(1).required(),
+  });
+  return schema.validate(book);
+}
+
+//validate update book
+function validateUpdateBook(book) {
+  const schema = joi.object({
+    title: joi.string().trim().min(3),
+    author: joi.string().trim().min(3),
+    price: joi.number().min(1),
+  });
+  return schema.validate(book);
+}
 module.exports = router;
