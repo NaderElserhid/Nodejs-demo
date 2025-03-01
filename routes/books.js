@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const joi = require("joi");
+const {
+  validateCreateBook,
+  validateUpdateBook,
+  Book,
+} = require("../modules/Books");
+const asyncHandler = require("express-async-handler");
 
 //make an object of books each book has id, title, author, price
 let books = [
@@ -13,65 +18,87 @@ let books = [
 // @route  GET /api/books
 // @access Public
 // @method GET
-router.get("/", (req, res) => {
-  res.json(books);
-});
+router.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const books = await Book.find();
+    res.status(200).json(books);
+  })
+);
 
 // @dec    Get a book by id
 // @route  GET /api/books/:id
 // @access Public
 // @method GET
 // to get a book by id
-router.get("/:id", (req, res) => {
-  const book = books.find((b) => b.id === parseInt(req.params.id));
-  if (book) {
-    res.status(200).json(book);
-  } else {
-    res.status(404).send("The book with the given ID was not found");
-  }
-});
+router.get(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    const book = await Book.findById(req.params.id);
+    if (book) {
+      res.status(200).json(book);
+    } else {
+      res.status(404).send("The book with the given ID was not found");
+    }
+  })
+);
 
 // @dec    Add a book
 // @route  POST /api/books
 // @access Public
 // @method POST
 
-router.post("/", (req, res) => {
-  const { error } = validateCreateBook(req.body);
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
-  }
+router.post(
+  "/",
+  asyncHandler(async (req, res) => {
+    const { error } = validateCreateBook(req.body);
 
-  const book = {
-    id: books.length + 1,
-    title: req.body.title,
-    author: req.body.author,
-    price: req.body.price,
-  };
-  books.push(book);
-  res.status(201).json(book);
-});
+    if (error) {
+      res.status(400).send(error.details[0].message);
+      return;
+    }
+
+    const book = new Book({
+      title: req.body.title,
+      author: req.body.author,
+      price: req.body.price,
+    });
+
+    const result = await book.save();
+    res.status(201).json(result);
+  })
+);
 
 // @dec    Update a book
 // @route  PUT /api/books/:id
 // @access Public
 // @method PUT
 
-router.put("/:id", (req, res) => {
-  const book = books.find((b) => b.id === parseInt(req.params.id));
-  if (book) {
-    res.status(200).json({ message: "Book updated successfully" });
-  } else {
-    res.status(404).send("The book with the given ID was not found");
-  }
-  const { error } = validateUpdateBook(req.body);
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
-  }
-  res.status(200).json(book);
-});
+router.put(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    const book = await Book.findByIdAndUpdate(
+      req.params.id,
+      {
+        title: req.body.title,
+        price: req.body.price,
+      },
+      { new: true }
+    );
+
+    if (book) {
+      res.status(200).json({ message: "Book updated successfully" });
+    } else {
+      res.status(404).send("The book with the given ID was not found");
+    }
+    const { error } = validateUpdateBook(req.body);
+    if (error) {
+      res.status(400).send(error.details[0].message);
+      return;
+    }
+    res.status(200).json(book);
+  })
+);
 
 // @dec    Delete a book
 // @route  DELETE /api/books/:id
@@ -87,23 +114,5 @@ router.delete("/:id", (req, res) => {
     res.status(404).send("The book with the given ID was not found");
   }
 });
-//validate create book
-function validateCreateBook(book) {
-  const schema = joi.object({
-    title: joi.string().trim().min(3).required(),
-    author: joi.string().trim().min(3).required(),
-    price: joi.number().min(1).required(),
-  });
-  return schema.validate(book);
-}
 
-//validate update book
-function validateUpdateBook(book) {
-  const schema = joi.object({
-    title: joi.string().trim().min(3),
-    author: joi.string().trim().min(3),
-    price: joi.number().min(1),
-  });
-  return schema.validate(book);
-}
 module.exports = router;
