@@ -9,6 +9,7 @@
   "author": "Nader Elserhdi",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.4.7",
     "experss": "^0.0.1-security",
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",

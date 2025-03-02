@@ -21,7 +21,7 @@ let books = [
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const books = await Book.find();
+    const books = await Book.find().populate("author");
     res.status(200).json(books);
   })
 );
@@ -77,26 +77,25 @@ router.post(
 router.put(
   "/:id",
   asyncHandler(async (req, res) => {
-    const book = await Book.findByIdAndUpdate(
-      req.params.id,
-      {
-        title: req.body.title,
-        price: req.body.price,
-      },
-      { new: true }
-    );
-
-    if (book) {
-      res.status(200).json({ message: "Book updated successfully" });
-    } else {
-      res.status(404).send("The book with the given ID was not found");
-    }
     const { error } = validateUpdateBook(req.body);
     if (error) {
       res.status(400).send(error.details[0].message);
       return;
     }
-    res.status(200).json(book);
+
+    const updatedBook = await Book.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          title: req.body.title,
+          author: req.body.author,
+          price: req.body.price,
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json(updatedBook);
   })
 );
 
@@ -105,14 +104,17 @@ router.put(
 // @access Public
 // @method DELETE
 
-router.delete("/:id", (req, res) => {
-  const book = books.find((b) => b.id === parseInt(req.params.id));
-  if (book) {
-    books = books.filter((b) => b.id !== parseInt(req.params.id));
-    res.status(200).json({ message: "Book deleted successfully" });
-  } else {
-    res.status(404).send("The book with the given ID was not found");
-  }
-});
+router.delete(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    const book = await Book.findById(req.params.id);
+    if (book) {
+      await book.findByIdAndDelete(req.params.id);
+      res.status(200).json({ message: "Book deleted successfully" });
+    } else {
+      res.status(404).send("The book with the given ID was not found");
+    }
+  })
+);
 
 module.exports = router;
