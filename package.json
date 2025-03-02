@@ -9,6 +9,7 @@
   "author": "Nader Elserhdi",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
     "experss": "^0.0.1-security",
     "express": "^4.21.2",
