@@ -2,6 +2,8 @@ const express = require("express");
 const booksPath = require("./routes/books");
 const authorpath = require("./routes/authors");
 const mongoose = require("mongoose");
+const logger = require("./middlewares/logger");
+const { notFound, errorHanlder } = require("./middlewares/errors");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -17,9 +19,16 @@ const app = express();
 // Apply middleware
 app.use(express.json());
 
+// Use the logger middleware
+app.use(logger);
+
 // Use the books route
 app.use("/api/books", booksPath);
 app.use("/api/author", authorpath);
+
+//Error handling middleware
+app.use(notFound);
+app.use(errorHanlder);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () =>
