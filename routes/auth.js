@@ -51,30 +51,25 @@ router.post(
 router.post(
   "/login",
   asyncHandler(async (req, res) => {
-    const { error } = validateRegisterUser(req.body);
+    const { error } = validateLoginUser(req.body);
     if (error) {
       res.status(400).json({ message: error.details[0].message });
     }
     let user = await User.findOne({ email: req.body.email });
-    if (user) {
+    if (!user) {
       return res
         .status(400)
-        .json({ message: "this user is already registered" });
+        .json({ message: "invalid email or password" });
     }
-    const salt = await bcrypt.genSalt(10);
-    req.body.password = await bcrypt.hash(req.body.password, salt);
+    const isPasswordMatch = await bcrypt.compare(req.body.password,user.password);
 
-    user = new User({
-      email: req.body.email,
-      username: req.body.username,
-      password: req.body.password,
-      isAdmin: req.body.isAdmin,
-    });
-    const result = await user.save();
+    if (!isPasswordMatch) {
+    return res.status(400).json({ message: "invalid email or password" });
+    }
     const token = null;
-    const { password, ...other } = result._doc;
+    const { password, ...other } = user._doc;
 
-    res.status(201).json({ ...other, token });
+    res.status(200).json({ ...other, token });
   })
 );
 
