@@ -66,6 +66,7 @@ router.post(
     if (!isPasswordMatch) {
     return res.status(400).json({ message: "invalid email or password" });
     }
+    // this for token 
     const token = null;
     const { password, ...other } = user._doc;
 
