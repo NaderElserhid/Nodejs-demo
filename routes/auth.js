@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken")
 const {
   User,
   validateLoginUser,
@@ -36,7 +37,7 @@ router.post(
       isAdmin: req.body.isAdmin,
     });
     const result = await user.save();
-    const token = null;
+    const token = jwt.sign({id: user._id ,username : user.username} , "secretKey")
     const { password, ...other } = result._doc;
 
     res.status(201).json({ ...other, token });
