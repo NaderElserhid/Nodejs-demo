@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 const {
   User,
   validateLoginUser,
@@ -37,7 +37,7 @@ router.post(
       isAdmin: req.body.isAdmin,
     });
     const result = await user.save();
-    const token = jwt.sign({id: user._id ,username : user.username} , "secretKey")
+    const token = jwt.sign({id: user._id ,isAdmin : user.isAdmin},process.env.JWT_SECRET_KEY );
     const { password, ...other } = result._doc;
 
     res.status(201).json({ ...other, token });
@@ -68,7 +68,7 @@ router.post(
     return res.status(400).json({ message: "invalid email or password" });
     }
     // this for token 
-    const token = null;
+    const token = jwt.sign({id: user._id ,isAdmin : user.isAdmin},process.env.JWT_SECRET_KEY );
     const { password, ...other } = user._doc;
 
     res.status(200).json({ ...other, token });
