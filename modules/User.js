@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
+
+// the schema for user 
+
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,

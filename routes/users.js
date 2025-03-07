@@ -8,85 +8,76 @@ const {
   verifyTokenAndAdmin,
 } = require("../middlewares/verifyToken");
 
-// @dec    get all users
-// @route  POST /users
-// @access public
-// @method get (admin only )
-
+// @desc    Get all users (Admin only)
+// @route   GET /users
+// @access  Private (Admin)
 router.get(
   "/",
   verifyTokenAndAdmin,
   asyncHandler(async (req, res) => {
-    const users = await User.find().select("-password"); // Corrected syntax
+    const users = await User.find().select("-password");
     res.status(200).json(users);
   })
 );
 
-// @dec    get all users
-// @route  POST /users
-// @access public
-// @method get (usre himslef )
-
-router.get(
-  "/",
-  verifyTokenAndAuthorization,
-  asyncHandler(async (req, res) => {
-    const users = await User.findById().select("-password"); // Corrected syntax
-   if(user){
-    res.status(200).json(users);
-   }else{
-    res.status(404).json({message : "user not found"})
-   }
-  })
-);
-
-// @dec    Delete users
-// @route  POST /users/:id
-// @access public
-// @method  Delete  (usre himslef )
-
-
+// @desc    Get a single user (User himself)
+// @route   GET /users/:id
+// @access  Private (User)
 router.get(
   "/:id",
   verifyTokenAndAuthorization,
   asyncHandler(async (req, res) => {
-    const users = await User.findById().select("-password"); // Corrected syntax
-   if(user){
-    await User.findByIdAndDelete(req.params.id);
-    res.status(200).json({message : "has been deleted successfully"});
-   }else{
-    res.status(404).json({message : "user not found"})
-   }
+    const user = await User.findById(req.params.id).select("-password");
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
   })
 );
 
-// @dec    update User
-// @route  POST /users/:id
-// @access privet
-// @method Put
+// @desc    Delete user (User himself)
+// @route   DELETE /users/:id
+// @access  Private (User)
+router.delete(
+  "/:id",
+  verifyTokenAndAuthorization,
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (user) {
+      await User.findByIdAndDelete(req.params.id);
+      res.status(200).json({ message: "User has been deleted successfully" });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  })
+);
+
+// @desc    Update User
+// @route   PUT /users/:id
+// @access  Private (User)
 
 router.put(
   "/:id",
   verifyTokenAndAuthorization,
   asyncHandler(async (req, res) => {
     if (req.user.id !== req.params.id) {
-      return res
-        .status(403)
-        .json({
-          message: "you are not allowed , you can only up datat your peofile",
-        });
+      return res.status(403).json({
+        message: "You are not allowed, you can only update your profile",
+      });
     }
+
     const { error } = validateUpdateUser(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
-    console.log(req.headers);
 
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       req.body.password = await bcrypt.hash(req.body.password, salt);
     }
-    const UpdateUser = await User.findByIdAndUpdate(
+
+    const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       {
         $set: {
@@ -97,7 +88,8 @@ router.put(
       },
       { new: true }
     ).select("-password");
-    res.status(200).json(UpdateUser);
+
+    res.status(200).json(updatedUser);
   })
 );
 
