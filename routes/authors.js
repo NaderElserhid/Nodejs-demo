@@ -7,7 +7,7 @@ const {
   Author,
   validateCreateAuthor,
   validateUpdateAuthor,
-} = require("../modules/Author");
+} = require("../models/Author");
 
 // @dec    Get all authors
 // @route  GET /api/authors

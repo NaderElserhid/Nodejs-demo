@@ -4,7 +4,7 @@ const {
   validateCreateBook,
   validateUpdateBook,
   Book,
-} = require("../modules/Books");
+} = require("../models/Books");
 const asyncHandler = require("express-async-handler");
 const { verifyTokenAndAdmin } = require("../middlewares/verifyToken");
 

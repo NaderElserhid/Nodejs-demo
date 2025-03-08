@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
-const { User, validateUpdateUser } = require("../modules/User");
+const { User, validateUpdateUser } = require("../models/User");
 const {
   verifyTokenAndAuthorization,
   verifyTokenAndAdmin,

@@ -7,7 +7,7 @@ const {
   User,
   validateLoginUser,
   validateRegisterUser,
-} = require("../modules/User");
+} = require("../models/User");
 
 // @dec    Register New author
 // @route  POST /api/auth
@@ -19,14 +19,18 @@ router.post(
   asyncHandler(async (req, res) => {
     const { error } = validateRegisterUser(req.body);
     if (error) {
-      res.status(400).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
+
     let user = await User.findOne({ email: req.body.email });
     if (user) {
-      return res
-        .status(400)
-        .json({ message: "this user is already registered" });
+      return res.status(400).json({ message: "User already exists with the given email" });
     }
+
+    if (!req.body.password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
     const salt = await bcrypt.genSalt(10);
     req.body.password = await bcrypt.hash(req.body.password, salt);
 
@@ -36,13 +40,20 @@ router.post(
       password: req.body.password,
       isAdmin: req.body.isAdmin,
     });
+
     const result = await user.save();
-    const token = jwt.sign({id: user._id ,isAdmin : user.isAdmin},process.env.JWT_SECRET_KEY );
+
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET_KEY
+    );
+
     const { password, ...other } = result._doc;
 
     res.status(201).json({ ...other, token });
   })
 );
+
 
 // @dec    login user
 // @route  POST /api/login
