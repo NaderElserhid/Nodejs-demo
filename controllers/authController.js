@@ -5,9 +5,10 @@ const {
   validateLoginUser,
   validateRegisterUser,
 } = require("../models/User");
+const jwt = require('jsonwebtoken');
 
 // @dec    Register New author
-// @route  POST /api/auth
+// @route  POST /api/register
 // @access Public
 // @method POST
 
@@ -49,33 +50,41 @@ const  register =   asyncHandler(async (req, res) => {
   })
 
 
- // @dec    login user
-// @route  POST /api/login
-// @access Public
-// @method POST
+// @desc    Login user
+// @route   POST /api/login
+// @access  Public
 
-  const login = asyncHandler(async (req, res) => {
-    const { error } = validateLoginUser(req.body);
-    if (error) {
-      res.status(400).json({ message: error.details[0].message });
-    }
-    let user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "invalid email or password" });
-    }
-    const isPasswordMatch = await bcrypt.compare(req.body.password,user.password);
+const login = asyncHandler(async (req, res) => {
+  // Validate user input
+  const { error } = validateLoginUser(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
 
-    if (!isPasswordMatch) {
-    return res.status(400).json({ message: "invalid email or password" });
-    }
-    // this for token 
-    const token = jwt.sign({id: user._id ,isAdmin : user.isAdmin},process.env.JWT_SECRET_KEY );
-    const { password, ...other } = user._doc;
+  // Check if user exists
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid email or password" });
+  }
 
-    res.status(200).json({ ...other, token });
-  })
+  // Verify password
+  const isPasswordMatch = await bcrypt.compare(req.body.password, user.password);
+  if (!isPasswordMatch) {
+    return res.status(400).json({ message: "Invalid email or password" });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: user._id, isAdmin: user.isAdmin },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: "1h" } // Token expires in 1 hour
+  );
+
+  // Exclude password from response
+  const { password, ...otherDetails } = user._doc;
+
+  res.status(200).json({ ...otherDetails, token });
+});
 
 
   module.exports = {
