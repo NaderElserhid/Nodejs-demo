@@ -16,7 +16,15 @@ const {
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const authors = await Author.find();
+    const {pageNumber} = req.query;
+    let authors;
+    if(pageNumber){
+       authors = await Author.find()
+                            .skip((pageNumber -1) *2)
+                            .limit(2);
+    }else{
+      authors = await Author.find();
+    }
     res.status(200).json(authors);
   })
 );

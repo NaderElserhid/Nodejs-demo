@@ -22,7 +22,13 @@ let books = [
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const books = await Book.find().populate("author");
+    const {minPrice , maxPrice} = req.query;
+    let books;
+    if(minPrice & maxPrice){
+       books = await Book.find({ price: { $gte: minPrice, $lte: maxPrice } }).populate("author");
+    }else{
+       books = await Book.find().populate("author");
+    }
     res.status(200).json(books);
   })
 );
