@@ -23,6 +23,7 @@ app.use("/api/books", require("./routes/books"));
 app.use("/api/author", require("./routes/authors"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
+app.use("/api/upload", require("./routes/upload"));
 app.use("/password", require("./routes/password"));
 
 //Error handling middleware
