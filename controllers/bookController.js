@@ -6,12 +6,15 @@ const {
 } = require("../models/Books");
 const { models } = require("mongoose");
 
+//hi 
 
-// @dec    Get all books
-// @route  GET /api/books
-// @access Public
-// @method GET
 
+/**
+ * @route  GET /@dec    Get all books
+ * api/books
+ * @access Public
+ * @method GET
+ */
 const getAllbooks = asyncHandler(async (req, res) => {
   const { minPrice, maxPrice } = req.query;
   let books;
@@ -29,6 +32,7 @@ const getAllbooks = asyncHandler(async (req, res) => {
 // @route  GET /api/books/:id
 // @access Public
 // @method GET
+
 
 const getBookById =   asyncHandler(async (req, res) => {
     const book = await Book.findById(req.params.id);
